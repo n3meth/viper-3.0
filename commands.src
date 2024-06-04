@@ -564,7 +564,11 @@ exploitScanCommandHandler = function(params, extensionMediator)
         lib = libManager.getCurrentLib("metaxploit")
         address = lib.data.ip
     else
-        if is_lan_ip(address) then address = libManager.getCurrentLib("metaxploit").data.ip.public
+        lan = is_lan_ip(address)
+        if is_lan_ip(address) then
+            localIp = address
+            publicIp = libManager.getCurrentLib("metaxploit").data.ip.public
+        else 
         if port == null then return Error.New("Port is required")
         router = Router.New(address)
         if router isa Error then return router
@@ -580,8 +584,9 @@ exploitScanCommandHandler = function(params, extensionMediator)
         if device == null then return Error.New("Port is not open/found")
         localIp = device.key
         publicIp = address
+        end if
         address = {
-            "local": device.key,
+            "local": localIp,
             "public": publicIp
         }
     end if
