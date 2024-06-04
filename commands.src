@@ -1533,3 +1533,54 @@ commandManager.registerCommand(Command.New({
     ],
     "callback": @helpCommandHandler
 }))
+
+grabCommandHelper = function(params, extensionMediator)
+    sessionManager = extensionMediator.getExtension("sessionManager")
+    session = sessionManager.currentSession
+    handler = session.handler
+
+    files = handler.getFile("/home").children
+
+    printContent = function(file)
+            if file isa Error then return print(file.message)
+            print file.content
+    end function
+
+    getContent = function(userFolder)
+        if userFolder.name == "guest" then return
+        if not userFolder.hasPermission("r") then return
+        
+        configFolder = userFolder.child("Config")
+        if configFolder isa Error then return
+
+        if (params.scope == "bank" or params.scope == "all") then 
+            file = configFolder.child("Bank.txt")
+            if file isa Error then return
+            printContent(file)
+        end if
+        if (params.scope == "mail" or params.scope == "all") then
+            file = configFolder.child("Mail.txt")
+            if file isa Error then return
+            printContent(file)
+        end if
+    end function
+
+    forEach(files, @getContent)
+
+end function
+
+commandManager.registerCommand(Command.New({
+    "name": "grab",
+    "description": "grab mail and bank account",
+    "parameters": [
+        Parameter.New({
+            "name": "scope",
+            "required": true
+        })
+    ],
+    "callback": @grabCommandHelper,
+    "permissions": {
+        "object": "file",
+        "privilege": "user"
+    }
+}))
