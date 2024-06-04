@@ -1,11 +1,28 @@
 import_code("./file.src")
 import_code("./computer.src")
 import_code("./shell.src")
+import_code("./ftpshell.src")
 import_code("../../libs/error.src")
 
 computerObjectFactory = function (object)
     if typeof(object) == "file" then return File.New(object)
     if typeof(object) == "computer" then return Computer.New(object)
+    if typeof(object) == "ftpshell" then return FtpShell.New(object)
     if typeof(object) == "shell" then return Shell.New(object)
+    return Error.New("Invalid object type")
+end function
+
+computerObjectWithTypeFactory = function (object, lib)
+    type = ""
+    if lib.lib_name == "libftp" then type = "ftp"
+    if lib.lib_name == "libssh" then type = "ssh"
+
+    if typeof(object) == "file" then return File.New(object)
+    if typeof(object) == "computer" then return Computer.New(object)
+    if typeof(object) == "shell" and type == "ftp" then 
+        return FtpShell.New(object)
+    else if typeof(object) == "shell" then 
+        return Shell.New(object)
+    end if
     return Error.New("Invalid object type")
 end function

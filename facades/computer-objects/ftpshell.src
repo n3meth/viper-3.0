@@ -1,0 +1,24 @@
+import_code("../../libs/error.src")
+import_code("./computer.src")
+
+FtpShell = {}
+FtpShell.shell = null
+FtpShell.getComputer = function()
+    result = self.shell.host_computer()
+    if result == null then return Error.New("No computer found")
+    return Computer.New(result)
+end function
+FtpShell.transferFile = function(fileLocation, transferFolderLocation, otherShell)
+    result = self.shell.put(fileLocation, transferFolderLocation, otherShell.shell)
+    if typeof(result) == "string" then return Error.New(result)
+    return result
+end function
+FtpShell.activate = function()
+    self.shell.start_terminal()
+end function
+FtpShell.New = function(shell)
+    if typeof(shell) != "shell" and typeof(shell) != "ftpshell" then return Error.New("Invalid ftp shell")
+    result = new FtpShell
+    result.shell = shell
+    return result
+end function

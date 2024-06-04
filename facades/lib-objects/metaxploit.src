@@ -38,7 +38,7 @@ Metaxploit.hack = function(lib, options)
             if options == null then options = ""
             result = lib.overflow(vulnaribility[0], exploit, options)
             if result == string or result == null or result == number then continue
-            results.push(computerObjectFactory(result))
+            results.push(computerObjectWithTypeFactory(result, lib))
         end for
         return results
     end function
