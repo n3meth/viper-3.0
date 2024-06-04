@@ -91,8 +91,8 @@ end function
 LibManager.getPivotLib = function(libType)
     return self.pivotLibs[libType]
 end function
-LibManager.setPivotLib = function(libType, lib)
-    self.pivotLibs[libType] = lib
+LibManager.setPivotLib = function(lib)
+    self.pivotLibs[lib.type] = lib
 end function
 LibManager.setMediator = function (mediator)
     self.mediator = mediator
