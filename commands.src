@@ -406,11 +406,13 @@ nmapCommandHandler = function(params, extensionMediator)
     router = Router.New(ip)
     if router isa Error then return router
     devices = router.devices()
-
+    lan = is_lan_ip(ip)
+    
     allPorts = []
     handleAddDevice = function(device)
-        if device.value.len == 0 then allPorts.push({"port": "none", "open": false, "forwarded": false, "local": device.key, "type": "none", "version": "none"})
+        if device.value.len == 0 then allPorts.push({"port": "-", "firewall": false, "open": false, "forwarded": false, "local": device.key, "type": "-", "version": "-"})
         for port in device.value
+            if not lan and not port.forwarded then port.open = false
             allPorts.push(port)
         end for
     end function
@@ -418,7 +420,7 @@ nmapCommandHandler = function(params, extensionMediator)
 
     allPorts.sort("port")
 
-    viperUi.nmap(allPorts, router)
+    viperUi.nmap(router, allPorts)
 end function
 commandManager.registerCommand(Command.New({
     "name": "nmap",

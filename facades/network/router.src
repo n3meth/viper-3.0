@@ -18,7 +18,7 @@ Router.ip = function()
     result.public = self.router.public_ip()
     return result
 end function
-Router.devices = function()
+Router.devices = function(lan = false)
     ips = self.router.devices_lan_ip()
     router = self.router
 
@@ -29,8 +29,10 @@ Router.devices = function()
         return result
     end function
     devicesWithPorts = map(ips, @handleGetDevicePorts)
+    
+    forwardedPorts = []
+    if router.hasIndex("used_ports") > 0 then forwardedPorts = router.used_ports()
 
-    forwardedPorts = router.used_ports()
     handleFindPortInUsedPorts = function(port)
         handleHasPort = function(usedPort)
             return usedPort.get_lan_ip == port.local and usedPort.port_number == port.port
@@ -38,14 +40,25 @@ Router.devices = function()
         return some(forwardedPorts, @handleHasPort)
     end function
 
+    handleFirewallInUsedPort = function(port)
+        if typeof(port) == "string" then return true
+        return false
+    end function 
+
     getPortInfo = function(port)
-        result = {}
-        result.port = port.port_number
-        result.open = not(port.is_closed)
-        result.local = port.get_lan_ip
-        result.forwarded = handleFindPortInUsedPorts(result)
-        result.type = router.port_info(port).split(" ")[0]
-        result.version = router.port_info(port).split(" ")[1]
+        result = {"port": "-", "firewall": false, "open": false, "forwarded": false, "local": "-", "type": "-", "version": "-"}
+        result.firewall = handleFirewallInUsedPort(port)
+        if not result.firewall then 
+            result.port=port.port_number
+            result.open=not(port.is_closed and not lan)
+            result.local=port.get_lan_ip
+            result.forwarded=handleFindPortInUsedPorts(result)
+            result.type=router.port_info(port).split(" ")[0]
+            result.version=router.port_info(port).split(" ")[1]
+        else
+            ip = port.split(" ")[1]		
+            result.local=ip
+        end if
         return result
     end function
     handleReduceDevicePorts = function(acc, port)
@@ -65,14 +78,29 @@ Router.devices = function()
     end function
     devices = reduce(map(filter(flat(map(devicesWithPorts, @handleGetPorts)), @handleFilterNullPorts), @getPortInfo), @handleReduceDevicePorts, {})
     devices = map(devices, @handleRemoveDublicates)
-
     for ip in ips
         if not devices.hasIndex(ip) then devices[ip] = []
     end for
 
     if not devices.hasIndex(self.ip.local) then devices[self.ip.local] = []
-    devices[self.ip.local].push({"port": 0, "open": true, "forwarded": true, "local": self.ip.local, "type": "kernel_router", "version": self.version()})
+    devices[self.ip.local].push({"port": 0, "open": true, "firewall":false, "forwarded": true, "local": self.ip.local, "type": "kernel_router", "version": self.version()})
     return devices
+end function
+Router.firewall = function()
+    rules = []
+    scanedRules = self.router.firewall_rules
+    if typeof(scanedRules) == "string" then return Error.New(scanedRules)
+    
+    for rule in scanedRules
+        rule = rule.split(" ")
+        result = {}
+        result.action = rule[0]
+        result.port = rule[1]
+        result.source = rule[2]
+        result.destination = rule[3]
+        rules.push(result)
+    end for 
+    return rules
 end function
 Router.New = function(ip)
     if not(is_valid_ip(ip)) then return Error.New("Invalid ip")
