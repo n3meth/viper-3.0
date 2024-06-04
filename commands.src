@@ -995,7 +995,7 @@ commandManager.registerCommand(Command.New({
     "parameters": [],
     "callback": @termCommandHandler,
     "permissions": {
-        "object": "shell"
+        "object": "ftpshell"
     }
 }))
 
@@ -1028,7 +1028,7 @@ commandManager.registerCommand(Command.New({
     ],
     "callback": @getCommandHandler,
     "permissions": {
-        "object": "shell"
+        "object": "ftpshell"
     }
 }))
 
@@ -1061,7 +1061,7 @@ commandManager.registerCommand(Command.New({
     ],
     "callback": @putCommandHandler,
     "permissions": {
-        "object": "shell"
+        "object": "ftpshell"
     }
 }))
 
