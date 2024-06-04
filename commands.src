@@ -1584,3 +1584,38 @@ commandManager.registerCommand(Command.New({
         "privilege": "user"
     }
 }))
+
+// https://github.com/cantemizyurek/viper-3.0/commit/e1c3621140fb55cd067e7c1f65881cbf6704e8cc
+mailHackCommandHandler = function(params, extensionMediator)
+	sessionManager = extensionMediator.getExtension("sessionManager")
+	session = sessionManager.currentSession
+    	handler = session.handler
+    	address = params.address
+
+	dictionaryManager = extensionMediator.getExtension("dictionaryManager")
+	password = dictionaryManager.get()
+
+	print("Starting dictionary attack...")
+    	while not password isa Error 
+    		mail = mail_login(address, password)
+		if typeof(mail) != "string" then break
+        	password = dictionaryManager.get()
+	end while
+
+	if typeof(mail) != "string" then 
+		print("Attack successful. Password: " + password)
+	else
+		print("Attack failed, password not found")
+	end if
+end function
+commandManager.registerCommand(Command.New({
+    "name": "mailhack", 
+    "description": "Run a dictionary attack on the given email address", 
+    "parameters": [ 
+        Parameter.New({ 
+            "name": "address", 
+            "required": true 
+        })
+    ], 
+    "callback": @mailHackCommandHandler 
+}))
