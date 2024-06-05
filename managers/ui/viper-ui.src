@@ -231,9 +231,9 @@ ViperUi.currentLibs = function (libs)
     self.displayTable(keys, items)
     print()
 end function
-ViperUi.nmap = function(devices, router)
+ViperUi.nmap = function(router, devices, rules = [])
     themeManager = self.mediator.getExtension("themeManager")
-    keys = ["host", "port", "forwarded", "state", "service", "version"]
+    keys = ["host", "port", "state", "service", "version"]
 
     handleGetItem = function(device)
         result = {}
@@ -245,18 +245,17 @@ ViperUi.nmap = function(devices, router)
             "text": str(device.port),
             "color": @themeManager.color(THEME_COLORS.INFO)
         }
-        if device.forwarded then
-            result.forwarded = {
-                "text": "TRUE",
-                "color": @themeManager.color(THEME_COLORS.SUCCESS)
-            }
-        else
-            result.forwarded = {
-                "text": "FALSE",
+        if device.port == "-" and device.firewall then 
+            result.state = {
+                "text": "firewall",
                 "color": @themeManager.color(THEME_COLORS.ERROR)
             }
-        end if
-        if device.open then
+        else if device.port == "-" then 
+            result.state = {
+                "text": "-",
+                "color": @themeManager.color(THEME_COLORS.ERROR)
+            }
+        else if device.open then
             result.state = {
                 "text": "OPEN",
                 "color": @themeManager.color(THEME_COLORS.SUCCESS)
@@ -285,6 +284,44 @@ ViperUi.nmap = function(devices, router)
     print themeManager.colorText(THEME_COLORS.HIGHLIGHT, "BSSID: " + themeManager.colorText(THEME_COLORS.SUCCESS, router.id))
     print()
 
+    self.displayTable(keys, items)
+
+    print()
+    if rules == null then rules = []
+    self.firewall(rules)
+    
+    print()
+end function
+ViperUi.firewall = function(rules)
+    themeManager = self.mediator.getExtension("themeManager")
+    keys = ["action", "port", "source", "destination"]
+    
+    handleGetItem = function(rule)
+        result = {}
+        result.action = {
+            "text": rule.action,
+            "color": @themeManager.color(THEME_COLORS.INFO)
+        }
+        result.port = {
+            "text": rule.port,
+            "color": @themeManager.color(THEME_COLORS.INFO)
+        }
+        result.source = {
+            "text": rule.source,
+            "color": @themeManager.color(THEME_COLORS.INFO)
+        }
+        result.destination = {
+            "text": rule.destination,
+            "color": @themeManager.color(THEME_COLORS.INFO)
+        }
+        return result
+    end function
+
+    print("\nScanning firewall rules...")
+    if rules == null then rules = []
+    if rules.len == 0 then exit("No rules found.")
+
+    items = map(rules, @handleGetItem)
     self.displayTable(keys, items)
 
     print()

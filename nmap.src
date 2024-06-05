@@ -1,0 +1,42 @@
+import_code("./mediator.src")
+import_code("./managers/ui/viper-ui.src")
+import_code("./managers/theme/theme-manager.src")
+import_code("./facades/network/router.src")
+
+
+extensionMediator = ExtensionMediator.New()
+viperUi = ViperUi.New()
+extensionMediator.addExtension("viperUi", viperUi)
+themeManager = ThemeManager.New()
+extensionMediator.addExtension("themeManager", themeManager)
+
+//command: nmap
+if params.len != 1 or params[0] == "-h" or params[0] == "--help" then exit(command_info("nmap_usage"))	
+if not is_valid_ip(params[0]) then exit("nmap: invalid ip address")
+if not get_shell.host_computer.is_network_active then exit("nmap: No internet access.")
+
+ipAddress = params[0]
+lan = is_lan_ip(ipAddress)
+
+allPorts = []
+handleAddDevice = function(device)
+    if device.value.len == 0 then allPorts.push({"port": "-", "firewall": false, "open": false, "forwarded": false, "local": device.key, "type": "-", "version": "-"})
+    for port in device.value
+        if not lan and not port.forwarded then port.open = false
+        allPorts.push(port)
+    end for
+end function
+router = Router.New(ipAddress)
+if router isa Error then
+    exit router.message
+end if
+
+devices = router.devices(lan)
+forEach(devices, @handleAddDevice)
+allPorts.sort("local")
+
+rules = router.firewall()
+if rules isa Error then rules = []
+
+viperUi.nmap(router, allPorts, rules)
+
