@@ -420,7 +420,7 @@ nmapCommandHandler = function(params, extensionMediator)
 
     allPorts.sort("port")
 
-    viperUi.nmap(router, allPorts)
+    viperUi.nmap(router, allPorts, null)
 end function
 commandManager.registerCommand(Command.New({
     "name": "nmap",
