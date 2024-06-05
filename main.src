@@ -87,6 +87,17 @@ init = function()
 
     themeManager = extensionMediator.getExtension("themeManager")
     themeManager.init()
+
+    commandManager = extensionMediator.getExtension("commandManager")
+    commandManager.addAlias("es", "exploitscan")
+    commandManager.addAlias("cl", "corruptlogs")
+    commandManager.addAlias("ex", "execute")
+    commandManager.addAlias("t", "targets")
+    commandManager.addAlias("dt", "deltarget")
+    commandManager.addAlias("x", "execute nmap")
+    commandManager.addAlias("log", "get /var/system.log")
+    commandManager.addAlias("metax", "put /lib/metaxploit.so /lib")
+    commandManager.addAlias("add", "addlib /lib/metaxploit.so jumpfile")
 end function
 
 main = function()
