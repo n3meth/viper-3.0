@@ -18,23 +18,13 @@ if not get_shell.host_computer.is_network_active then exit("nmap: No internet ac
 ipAddress = params[0]
 lan = is_lan_ip(ipAddress)
 
-allPorts = []
-handleAddDevice = function(device)
-    if device.value.len == 0 then allPorts.push({"port": "-", "firewall": false, "open": false, "forwarded": false, "local": device.key, "type": "-", "version": "-"})
-    for port in device.value
-        if not lan and not port.forwarded then port.open = false
-        allPorts.push(port)
-    end for
-end function
 router = Router.New(ipAddress)
 if router isa Error then
     exit router.message
 end if
-
 devices = router.devices(lan)
-forEach(devices, @handleAddDevice)
-allPorts.sort("local")
-
+allPorts = router.ports(devices)
+allPorts.sort("port").sort("local").sort("open", 0)
 rules = router.firewall()
 if rules isa Error then rules = []
 

@@ -3,6 +3,7 @@ import_code("../../libs/functional.src")
 
 Router = {}
 Router.router = null
+Router.lan = false
 Router.id = function()
     return self.router.bssid_name()
 end function
@@ -21,6 +22,7 @@ end function
 Router.devices = function(lan = false)
     ips = self.router.devices_lan_ip()
     router = self.router
+    lanIp = self.lan
 
     handleGetDevicePorts = function(device)
         result = {}
@@ -31,7 +33,7 @@ Router.devices = function(lan = false)
     devicesWithPorts = map(ips, @handleGetDevicePorts)
     
     forwardedPorts = []
-    if router.hasIndex("used_ports") > 0 then forwardedPorts = router.used_ports()
+    if not lanIp  then forwardedPorts = router.used_ports()
 
     handleFindPortInUsedPorts = function(port)
         handleHasPort = function(usedPort)
@@ -50,7 +52,7 @@ Router.devices = function(lan = false)
         result.firewall = handleFirewallInUsedPort(port)
         if not result.firewall then 
             result.port=port.port_number
-            result.open=not(port.is_closed and not lan)
+            result.open=not(port.is_closed and not lanIp)
             result.local=port.get_lan_ip
             result.forwarded=handleFindPortInUsedPorts(result)
             result.type=router.port_info(port).split(" ")[0]
@@ -102,10 +104,24 @@ Router.firewall = function()
     end for 
     return rules
 end function
+Router.ports = function(devices)
+    allPorts = []
+    lanIp = self.lan
+    handlePort = function(device)
+        if device.value.len == 0 then allPorts.push({"port": "-", "firewall": false, "open": false, "forwarded": false, "local": device.key, "type": "-", "version": "-"})
+        for port in device.value
+            if not lanIp and not port.forwarded then port.open = false
+            allPorts.push(port)
+        end for
+    end function
+    forEach(devices, @handlePort)
+    return allPorts
+end function
 Router.New = function(ip)
     if not(is_valid_ip(ip)) then return Error.New("Invalid ip")
     result = new Router
     result.router = get_router(ip)
+    result.lan = is_lan_ip(ip)
     if result.router == null then return Error.New("Invalid ip")
     return result
 end function

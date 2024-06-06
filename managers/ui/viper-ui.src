@@ -231,7 +231,7 @@ ViperUi.currentLibs = function (libs)
     self.displayTable(keys, items)
     print()
 end function
-ViperUi.nmap = function(router, devices, rules = [])
+ViperUi.nmap = function(router, devices, rules)
     themeManager = self.mediator.getExtension("themeManager")
     keys = ["host", "port", "state", "service", "version"]
 
@@ -285,12 +285,9 @@ ViperUi.nmap = function(router, devices, rules = [])
     print()
 
     self.displayTable(keys, items)
-
     print()
-    if rules == null then rules = []
     self.firewall(rules)
-    
-    print()
+
 end function
 ViperUi.firewall = function(rules)
     themeManager = self.mediator.getExtension("themeManager")
@@ -319,7 +316,11 @@ ViperUi.firewall = function(rules)
 
     print("\nScanning firewall rules...")
     if rules == null then rules = []
-    if rules.len == 0 then exit("No rules found.")
+    if rules.len == 0 then 
+        print "No rules found."
+        print
+        return
+    end if
 
     items = map(rules, @handleGetItem)
     self.displayTable(keys, items)
